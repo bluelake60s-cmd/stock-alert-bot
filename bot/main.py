@@ -1,12 +1,13 @@
 import argparse
 
 from bot import config, filter as filt, state as state_mod, telegram
-from bot.sources import ark, congress, finnhub_news
+from bot.sources import ark, congress, edgar, finnhub_news
 
 SOURCES = {
     "ark": ark.fetch,                 # ARK daily buys/sells (Cathie Wood)
     "ceo": finnhub_news.fetch_ceo,    # influential person named favorably
     "analyst": finnhub_news.fetch_analyst,  # analyst / bank upgrade
+    "sec": edgar.fetch,               # SEC 13D/13G/13F (Leopold, Buffett, Burry)
     "congress": congress.fetch,       # placeholder (no free source right now)
 }
 

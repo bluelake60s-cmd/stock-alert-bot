@@ -46,6 +46,29 @@ UPGRADE_CUES = [
     "上調", "上调", "升評", "升评", "目標價", "目标价", "首予買入", "評級上調",
 ]
 
+# SEC EDGAR filers to watch (CIK → display name). Their filings move markets.
+SEC_FILERS = {
+    "0002045724": "Leopold Aschenbrenner（Situational Awareness LP）",
+    "0001067983": "Warren Buffett（Berkshire Hathaway）",
+    "0001649339": "Michael Burry（Scion Asset Management）",
+}
+
+# Filing types worth alerting (others ignored).
+#   13D / 13G  = >5% beneficial-ownership stake — filed within ~10 days, the FAST,
+#                market-moving kind (e.g. Leopold's Nebius 13G).
+#   13F-HR     = quarterly holdings snapshot — ~45-day lag, shows direction.
+SEC_ALERT_FORMS = {
+    "SCHEDULE 13D", "SCHEDULE 13D/A", "SCHEDULE 13G", "SCHEDULE 13G/A",
+    "SC 13D", "SC 13D/A", "SC 13G", "SC 13G/A", "13F-HR", "13F-HR/A",
+}
+
+# Only alert filings within this many days, so adding the source doesn't dump years
+# of old 13Fs. The bot runs every 15 min, so a short window never misses anything live.
+SEC_LOOKBACK_DAYS = int(os.environ.get("SEC_LOOKBACK_DAYS", "14"))
+
+# SEC requires a descriptive User-Agent with contact info on every request.
+SEC_USER_AGENT = os.environ.get("SEC_USER_AGENT", "stock-alert-bot bluelake60s@gmail.com")
+
 # Major banks/brokers — used to qualify analyst-upgrade headlines and cut noise.
 BANKS = [
     "goldman", "morgan stanley", "jpmorgan", "j.p. morgan", "bofa",
