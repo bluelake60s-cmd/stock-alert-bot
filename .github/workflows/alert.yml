@@ -1,0 +1,69 @@
+name: Stock endorsement alerts → Telegram
+
+on:
+  schedule:
+    # Every 15 min, offset off the top of the hour. GitHub's scheduler is heavily
+    # oversubscribed at :00 and delays runs; 5/20/35/50 reduces that lag.
+    - cron: "5,20,35,50 * * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run (don't send Telegram, don't advance state)"
+        required: false
+        default: "false"
+      bootstrap:
+        description: "Record current items as seen, send nothing (run ONCE on first setup)"
+        required: false
+        default: "false"
+
+permissions:
+  contents: write
+
+env:
+  STATE_FILE: state/alerts.json
+
+jobs:
+  alert:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # Avoid concurrent runs racing on the state commit.
+    concurrency:
+      group: stock-alert
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Run alert bot
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          ARGS="--source all --state $STATE_FILE"
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then ARGS="$ARGS --dry-run"; fi
+          if [ "${{ github.event.inputs.bootstrap }}" = "true" ]; then ARGS="$ARGS --bootstrap"; fi
+          python -m bot.main $ARGS
+
+      - name: Commit updated state
+        run: |
+          if [ ! -f "$STATE_FILE" ]; then echo "$STATE_FILE not produced; nothing to commit"; exit 0; fi
+          git add "$STATE_FILE"
+          if git diff --cached --quiet -- "$STATE_FILE"; then echo "$STATE_FILE unchanged"; exit 0; fi
+          git config user.name "alert-bot"
+          git config user.email "alert-bot@users.noreply.github.com"
+          git commit -m "chore: update alert state ($(date -u +'%Y-%m-%d %H:%M UTC'))"
+          for attempt in 1 2 3; do
+            if git push; then echo "pushed on attempt $attempt"; exit 0; fi
+            echo "push rejected; rebasing onto latest origin/main"
+            git pull --rebase origin main
+            sleep $((attempt * 2))
+          done
+          echo "push failed after 3 attempts"; exit 1
