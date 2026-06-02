@@ -23,10 +23,13 @@ WATCHED_PEOPLE = {
     "Jensen Huang": ["jensen huang", "黃仁勳", "黄仁勋", "nvidia ceo"],
     "Elon Musk": ["elon musk", "馬斯克", "马斯克"],
     "Sam Altman": ["sam altman", "奧特曼", "奥特曼", "openai ceo"],
-    "Warren Buffett": ["warren buffett", "巴菲特", "berkshire"],
+    "Leopold Aschenbrenner": ["aschenbrenner", "situational awareness", "態勢感知"],
     "Cathie Wood": ["cathie wood", "木頭姐", "木头姐", "ark invest"],
-    "Jim Cramer": ["jim cramer", "克瑞莫"],
+    "Lisa Su": ["lisa su", "蘇姿丰", "苏姿丰", "amd ceo"],
+    "Warren Buffett": ["warren buffett", "巴菲特", "berkshire"],
     "Michael Burry": ["michael burry", "大空頭"],
+    "Dan Ives": ["dan ives", "wedbush"],
+    "Jim Cramer": ["jim cramer", "克瑞莫"],
 }
 
 # Positive-endorsement cue words (English + Chinese). One must appear for a CEO-mention alert.
