@@ -46,6 +46,43 @@ UPGRADE_CUES = [
     "上調", "上调", "升評", "升评", "目標價", "目标价", "首予買入", "評級上調",
 ]
 
+# --- Google News RSS (bilingual, fast for live keynote/Computex/GTC events) ---
+# Locale presets: (hl, gl, ceid).
+GOOGLE_NEWS_LOCALES = {
+    "zh": ("zh-TW", "TW", "TW:zh-Hant"),
+    "en": ("en-US", "US", "US:en"),
+}
+# (query, locale). Covers each big mover in both languages + NVIDIA investment events.
+GOOGLE_NEWS_QUERIES = [
+    ('"黃仁勳"', "zh"),
+    ('"Jensen Huang"', "en"),
+    ('"輝達" OR "輝達投資" OR "NVIDIA投資"', "zh"),
+    ('NVIDIA invests OR stake OR backs OR partnership', "en"),
+    ('"Cathie Wood" OR "木頭姐" OR "Aschenbrenner"', "en"),
+]
+# Only consider headlines published within this many hours (bounds the initial load;
+# dedupe-by-link handles the rest).
+NEWS_LOOKBACK_HOURS = int(os.environ.get("NEWS_LOOKBACK_HOURS", "48"))
+
+# Companies in the NVIDIA-endorsement ecosystem (name aliases → ticker). Presence in
+# a headline makes it relevant, and tags the alert with $TICKER.
+WATCHED_TICKERS = {
+    "MRVL": ["marvell", "邁威爾"],
+    "NOK": ["nokia", "諾基亞"],
+    "INTC": ["intel", "英特爾"],
+    "COHR": ["coherent"],
+    "LITE": ["lumentum"],
+    "CRWV": ["coreweave"],
+    "NBIS": ["nebius"],
+    "AVGO": ["broadcom", "博通"],
+    "VRT": ["vertiv"],
+    "TSM": ["tsmc", "台積電", "taiwan semi"],
+    "MU": ["micron", "美光"],
+    # NB: deliberately NOT including NVDA/輝達/黃仁勳 — the speaker's own company
+    # appears in almost every story, so it must not count toward relevance. The
+    # signal is when he names some OTHER company.
+}
+
 # SEC EDGAR filers to watch (CIK → display name). Their filings move markets.
 SEC_FILERS = {
     "0002045724": "Leopold Aschenbrenner（Situational Awareness LP）",
