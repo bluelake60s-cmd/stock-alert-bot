@@ -11,6 +11,7 @@ or a watched-ecosystem company name. The optional Claude filter then makes the f
 call (set ANTHROPIC_API_KEY — strongly recommended here, this feed is noisy).
 """
 import datetime
+import re
 import xml.etree.ElementTree as ET
 from email.utils import parsedate_to_datetime
 
@@ -22,9 +23,18 @@ BASE = "https://news.google.com/rss/search"
 
 
 def _detect_ticker(text):
+    """Match a watched company. Latin aliases use word boundaries so "intel" does
+    NOT match "intelligence"; CJK aliases (no word boundaries) match as substrings."""
     for ticker, aliases in config.WATCHED_TICKERS.items():
-        if any(a in text for a in aliases):
-            return ticker
+        for a in aliases:
+            a = a.strip().lower()
+            if not a:
+                continue
+            if a.isascii():
+                if re.search(rf"\b{re.escape(a)}\b", text):
+                    return ticker
+            elif a in text:
+                return ticker
     return None
 
 

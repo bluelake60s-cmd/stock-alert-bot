@@ -78,10 +78,17 @@ WATCHED_TICKERS = {
     "VRT": ["vertiv"],
     "TSM": ["tsmc", "台積電", "taiwan semi"],
     "MU": ["micron", "美光"],
+    "AMD": ["advanced micro", "amd"],
+    "ORCL": ["oracle", "甲骨文"],
     # NB: deliberately NOT including NVDA/輝達/黃仁勳 — the speaker's own company
     # appears in almost every story, so it must not count toward relevance. The
     # signal is when he names some OTHER company.
 }
+
+# NVIDIA official newsroom — press releases are the SOURCE of supplier/partner pops
+# (the $20B Marvell, $1B Nokia deals). Only "real money" releases pass the gate.
+NVIDIA_NEWSROOM_RSS = "https://nvidianews.nvidia.com/releases.xml"
+NVIDIA_MONEY_CUES = ["invest", "stake", "acquir", "billion", "$"]
 
 # SEC EDGAR filers to watch (CIK → display name). Their filings move markets.
 SEC_FILERS = {
