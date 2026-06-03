@@ -23,6 +23,7 @@ WATCHED_PEOPLE = {
     "Jensen Huang": ["jensen huang", "黃仁勳", "黄仁勋", "nvidia ceo"],
     "Elon Musk": ["elon musk", "馬斯克", "马斯克"],
     "Sam Altman": ["sam altman", "奧特曼", "奥特曼", "openai ceo"],
+    "Sundar Pichai": ["sundar pichai", "pichai", "皮查伊", "google ceo", "alphabet ceo"],
     "Leopold Aschenbrenner": ["aschenbrenner", "situational awareness", "態勢感知"],
     "Cathie Wood": ["cathie wood", "木頭姐", "木头姐", "ark invest"],
     "Lisa Su": ["lisa su", "蘇姿丰", "苏姿丰", "amd ceo"],
@@ -84,6 +85,17 @@ WATCHED_TICKERS = {
     # appears in almost every story, so it must not count toward relevance. The
     # signal is when he names some OTHER company.
 }
+
+# Google / Alphabet as a market mover — its AI capex/orders lift suppliers (Broadcom
+# popped 6% on the $80B raise). No clean PR feed, so we use targeted Google News.
+GOOGLE_INVEST_QUERIES = [
+    ("(Alphabet OR Google) (capex OR invests OR billion OR Broadcom OR TPU)", "en"),
+    ("(谷歌 OR Alphabet) (資本開支 OR 投資 OR 訂單 OR 億美元)", "zh"),
+]
+GOOGLE_INVEST_CUES = [
+    "capex", "invest", "billion", "raise", "spending", "fundrais", "order",
+    "資本開支", "投資", "億美元", "訂單", "募資", "燒錢", "受益", "受惠",
+]
 
 # NVIDIA official newsroom — press releases are the SOURCE of supplier/partner pops
 # (the $20B Marvell, $1B Nokia deals). Only "real money" releases pass the gate.

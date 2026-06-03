@@ -13,6 +13,8 @@
 | 🟢 ARK 每日持倉變動（Cathie Wood 買／沽） | `arkfunds.io`（免費，免 key） | ✅ 運作中 | 每個美股交易日更新一次 |
 | 📣 巨頭開金口（黃仁勳／馬斯克／Altman 等正面點名） | Finnhub 新聞（免費 key） | ✅ 運作中 | 分鐘級（受 cron 限制） |
 | 🌏 巨頭開金口・全網中英（Computex/GTC 等現場事件，台媒最快） | Google News RSS（免費，免 key） | ✅ 運作中 | 分鐘級；同股同日只發最快一篇 |
+| 🟩 輝達官方合作／投資新聞稿（供應商暴漲源頭） | NVIDIA newsroom RSS（免費，免 key） | ✅ 運作中 | 官方發布即捉到 |
+| 🟦 Google／Alphabet 投資帶動（AI 開支 → 帶起 Broadcom 等） | Google News RSS（免費，免 key） | ✅ 運作中 | 分鐘級；附「受惠股」 |
 | 📈 分析師／大行升評 | Finnhub 新聞（免費 key） | ✅ 運作中 | 分鐘級 |
 | 🔵 大戶 SEC 文件（Leopold／巴菲特／Burry） | SEC EDGAR（免費，免 key） | ✅ 運作中 | 13D/13G 約 10 日；13F 約 45 日 |
 | 🏛️ 國會議員交易 | — | ⏸️ 暫停（免費源已鎖，要付費 API） | 延遲數日 |
