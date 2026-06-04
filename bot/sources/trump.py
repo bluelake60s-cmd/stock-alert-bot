@@ -19,8 +19,10 @@ from email.utils import parsedate_to_datetime
 import requests
 
 from bot import config
+from bot.sources.google_news import BASE
 
 CASHTAG = re.compile(r"\$[A-Za-z]{1,5}\b")
+_TRUMP_NAMES = ("trump", "特朗普", "川普", "特郎普")
 
 # "intel" usually means intelligence (Trump's most common usage), not Intel Corp.
 _INTEL_NOISE = (
@@ -49,7 +51,7 @@ def _clean(s):
     return re.sub(r"\s+", " ", html.unescape(re.sub("<[^>]+>", " ", s or ""))).strip()
 
 
-def fetch(state):
+def _truth(state):
     cutoff = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(
         hours=config.NEWS_LOOKBACK_HOURS
     )
@@ -59,7 +61,7 @@ def fetch(state):
         r.raise_for_status()
         root = ET.fromstring(r.content)
     except Exception as e:
-        print(f"[trump] fetch failed: {e}")
+        print(f"[trump] truth fetch failed: {e}")
         return alerts
 
     for it in root.iter("item"):
@@ -96,3 +98,70 @@ def fetch(state):
             "_text": low,  # eligible for the optional Claude filter
         })
     return alerts
+
+
+def _holdings_news(state):
+    """Trump holdings/trades coverage via Google News — the fastest robust way to
+    learn of each new OGE disclosure. Same-day coverage collapses to one alert."""
+    cutoff = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(
+        hours=config.NEWS_LOOKBACK_HOURS
+    )
+    cands, seen_links = [], set()
+    for query, loc_key in config.TRUMP_NEWS_QUERIES:
+        hl, gl, ceid = config.GOOGLE_NEWS_LOCALES[loc_key]
+        try:
+            r = requests.get(
+                BASE,
+                params={"q": query, "hl": hl, "gl": gl, "ceid": ceid},
+                headers={"User-Agent": "Mozilla/5.0"},
+                timeout=20,
+            )
+            r.raise_for_status()
+            root = ET.fromstring(r.content)
+        except Exception as e:
+            print(f"[trump] news query {query!r} failed: {e}")
+            continue
+        for it in root.iter("item"):
+            title = (it.findtext("title") or "").strip()
+            link = (it.findtext("link") or "").strip()
+            pub = it.findtext("pubDate") or ""
+            src_el = it.find("source")
+            source = (src_el.text or "").strip() if src_el is not None else ""
+            if not title or not link or link in seen_links:
+                continue
+            try:
+                dt = parsedate_to_datetime(pub)
+                if dt < cutoff:
+                    continue
+            except (TypeError, ValueError):
+                dt = cutoff
+            low = f"{title} {source}".lower()
+            if not any(n in low for n in _TRUMP_NAMES):
+                continue
+            seen_links.add(link)
+            cands.append((dt, _detect(low), title, source, pub, link, low))
+
+    events = state.setdefault("gnews_events", [])
+    events_set = set(events)
+    alerts = []
+    for dt, ticker, title, source, pub, link, low in sorted(cands, key=lambda c: c[0]):
+        key = f"trump-{ticker or 'hold'}:{dt.date().isoformat()}"
+        if key in events_set:
+            continue
+        events_set.add(key)
+        events.append(key)
+        alerts.append({
+            "id": f"trumpnews:{key}",
+            "kind": f"🇺🇸 Trump 持倉／動向（最快：{source}）" if source else "🇺🇸 Trump 持倉／動向",
+            "title": title,
+            "detail": f"📰 最快報導：{source}｜{pub}",
+            "url": link,
+            "tickers": [ticker] if ticker else [],
+            "_text": low,
+        })
+    del events[:-500]
+    return alerts
+
+
+def fetch(state):
+    return _truth(state) + _holdings_news(state)

@@ -107,6 +107,14 @@ NVIDIA_MONEY_CUES = ["invest", "stake", "acquir", "billion", "$"]
 # real RSS; Truth Social itself blocks scraping). His feed is ~99% political, so we
 # only surface posts that NAME a company or carry a $CASHTAG — high precision.
 TRUMP_TRUTH_RSS = "https://trumpstruth.org/feed"
+# Trump holdings/trades coverage. The OGE disclosure trackers (open-cabinet,
+# trumpstrades, trumptracker) are JS apps with no stable free API and lag the same
+# filings the media report — so we catch each new disclosure via news instead
+# (robust + as fast). Same-day coverage collapses to the fastest single report.
+TRUMP_NEWS_QUERIES = [
+    ("(Trump OR 特朗普 OR 川普) (持倉 OR 加倉 OR 加持 OR 買入 OR 持股 OR 披露)", "zh"),
+    ("Trump (portfolio OR holdings OR \"bought shares\" OR disclosure OR \"stock trades\")", "en"),
+]
 TRUMP_TICKERS = {
     "INTC": ["intel"],
     "AAPL": ["apple"],
