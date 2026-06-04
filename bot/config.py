@@ -102,6 +102,32 @@ GOOGLE_INVEST_CUES = [
 NVIDIA_NEWSROOM_RSS = "https://nvidianews.nvidia.com/releases.xml"
 NVIDIA_MONEY_CUES = ["invest", "stake", "acquir", "billion", "$"]
 
+# --- Trump / Truth Social ---
+# Fastest free Trump signal = his own posts (trumpstruth.org mirrors Truth Social as
+# real RSS; Truth Social itself blocks scraping). His feed is ~99% political, so we
+# only surface posts that NAME a company or carry a $CASHTAG — high precision.
+TRUMP_TRUTH_RSS = "https://trumpstruth.org/feed"
+TRUMP_TICKERS = {
+    "INTC": ["intel"],
+    "AAPL": ["apple"],
+    "NVDA": ["nvidia"],
+    "AMD": ["advanced micro"],
+    "MU": ["micron"],
+    "DELL": ["dell"],
+    "BA": ["boeing"],
+    "TSLA": ["tesla"],
+    "TSM": ["tsmc", "taiwan semiconductor"],
+    "AVGO": ["broadcom"],
+    "X": ["u.s. steel", "us steel", "nippon steel"],
+    "COIN": ["coinbase"],
+    "MSTR": ["microstrategy"],
+    "DJT": ["truth social", "trump media"],
+    "GM": ["general motors"],
+    "F": ["ford motor"],
+    "LMT": ["lockheed"],
+    "MRVL": ["marvell"],
+}
+
 # SEC EDGAR filers to watch (CIK → display name). Their filings move markets.
 SEC_FILERS = {
     "0002045724": "Leopold Aschenbrenner（Situational Awareness LP）",

@@ -17,7 +17,8 @@
 | 🟦 Google／Alphabet 投資帶動（AI 開支 → 帶起 Broadcom 等） | Google News RSS（免費，免 key） | ✅ 運作中 | 分鐘級；附「受惠股」 |
 | 📈 分析師／大行升評 | Finnhub 新聞（免費 key） | ✅ 運作中 | 分鐘級 |
 | 🔵 大戶 SEC 文件（Leopold／巴菲特／Burry） | SEC EDGAR（免費，免 key） | ✅ 運作中 | 13D/13G 約 10 日；13F 約 45 日 |
-| 🏛️ 國會議員交易 | — | ⏸️ 暫停（免費源已鎖，要付費 API） | 延遲數日 |
+| 🇺🇸 Trump Truth Social 提及個股 | trumpstruth.org RSS（免費，免 key） | ✅ 運作中 | 即時；只發提及公司/$cashtag 的貼文 |
+| 🏛️ 國會議員交易／Trump 官員實際買賣 | OGE 披露（open-cabinet 等） | ⏸️ 暫停（延遲數週、無免費 API） | 事後參考 |
 
 - 監聽嘅人物名單喺 [`bot/config.py`](bot/config.py) 嘅 `WATCHED_PEOPLE`，大戶 SEC 名單喺 `SEC_FILERS`（CIK → 名），自己加減即可。
 - SEC 源會解析 13F 季度持倉、同上季比較，直接報「🆕 新買／➕ 加注／➖ 減持／❌ 清倉」；13D/13G（持股超 5%）即時報快訊。

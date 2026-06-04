@@ -1,7 +1,7 @@
 import argparse
 
 from bot import config, filter as filt, state as state_mod, telegram
-from bot.sources import ark, congress, edgar, finnhub_news, google, google_news, nvidia
+from bot.sources import ark, congress, edgar, finnhub_news, google, google_news, nvidia, trump
 
 SOURCES = {
     "ark": ark.fetch,                 # ARK daily buys/sells (Cathie Wood)
@@ -9,6 +9,7 @@ SOURCES = {
     "gnews": google_news.fetch,       # bilingual live-event news (Google News RSS)
     "nvidia": nvidia.fetch,           # NVIDIA official newsroom (partner/investment PRs)
     "google": google.fetch,           # Google/Alphabet AI capex lifting suppliers
+    "trump": trump.fetch,             # Trump Truth Social posts naming a stock
     "analyst": finnhub_news.fetch_analyst,  # analyst / bank upgrade
     "sec": edgar.fetch,               # SEC 13D/13G/13F (Leopold, Buffett, Burry)
     "congress": congress.fetch,       # placeholder (no free source right now)
