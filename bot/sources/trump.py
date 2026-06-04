@@ -22,6 +22,12 @@ from bot import config
 
 CASHTAG = re.compile(r"\$[A-Za-z]{1,5}\b")
 
+# "intel" usually means intelligence (Trump's most common usage), not Intel Corp.
+_INTEL_NOISE = (
+    "intelligence", "intel official", "intel community", "intel agency", "ex-intel",
+    "intel officer", "intel report", "intel offici", "central intel", "intel chief",
+)
+
 
 def _detect(text):
     for ticker, aliases in config.TRUMP_TICKERS.items():
@@ -31,6 +37,8 @@ def _detect(text):
                 continue
             if a.isascii():
                 if re.search(rf"\b{re.escape(a)}\b", text):
+                    if a == "intel" and any(n in text for n in _INTEL_NOISE):
+                        continue  # "intel" = intelligence here, not Intel Corp
                     return ticker
             elif a in text:
                 return ticker
