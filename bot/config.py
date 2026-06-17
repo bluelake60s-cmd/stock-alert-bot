@@ -8,6 +8,9 @@ TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
 # Free key from https://finnhub.io (powers the CEO-mention + analyst-upgrade sources)
 FINNHUB_API_KEY = os.environ.get("FINNHUB_API_KEY", "")
 
+# Free key from https://financialmodelingprep.com (250 req/day) — powers the `congress` source.
+FMP_API_KEY = os.environ.get("FMP_API_KEY", "")
+
 # --- Optional LLM filter (cuts false positives). The bot is fully free WITHOUT it. ---
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 ANTHROPIC_MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-haiku-4-5-20251001")
@@ -158,6 +161,22 @@ SEC_LOOKBACK_DAYS = int(os.environ.get("SEC_LOOKBACK_DAYS", "14"))
 
 # SEC requires a descriptive User-Agent with contact info on every request.
 SEC_USER_AGENT = os.environ.get("SEC_USER_AGENT", "stock-alert-bot bluelake60s@gmail.com")
+
+# --- Congressional trades (Financial Modeling Prep) ---
+# Members of Congress must disclose stock trades within 45 days (STOCK Act). We scan
+# the latest House + Senate disclosure feeds and alert when a trade names one of
+# WATCHED_TICKERS. "Latest" feeds return newest-first, so a couple of pages per
+# chamber cost only a few of the 250 free daily requests.
+FMP_CONGRESS_ENDPOINTS = {
+    "眾議院": "https://financialmodelingprep.com/stable/house-latest",
+    "參議院": "https://financialmodelingprep.com/stable/senate-latest",
+}
+# Only alert disclosures filed within this many days (bounds the initial load; the bot
+# runs often so a short window never misses a fresh filing). Dedup handles re-sends.
+# Filings lag ~30-45 days, so this is a slow "direction" signal, not a fast one.
+CONGRESS_LOOKBACK_DAYS = int(os.environ.get("CONGRESS_LOOKBACK_DAYS", "30"))
+# Pages of the latest feed to scan per chamber (100 rows/page).
+CONGRESS_MAX_PAGES = int(os.environ.get("CONGRESS_MAX_PAGES", "3"))
 
 # Major banks/brokers — used to qualify analyst-upgrade headlines and cut noise.
 BANKS = [
