@@ -79,7 +79,8 @@ def _truth(state):
         low = body.lower()
         ticker = _detect(low)
         cash = CASHTAG.findall(body)
-        if not (ticker or cash):
+        market = any(cue in low for cue in config.TRUMP_MARKET_CUES)
+        if not (ticker or cash or market):
             continue
 
         tickers = [ticker] if ticker else []
@@ -88,9 +89,10 @@ def _truth(state):
             if t not in tickers:
                 tickers.append(t)
 
+        kind = "🇺🇸 Trump Truth 貼文（提及個股）" if tickers else "🇺🇸 Trump Truth 貼文（股市／經濟）"
         alerts.append({
             "id": f"trump:{link}",
-            "kind": "🇺🇸 Trump Truth 貼文（提及個股）",
+            "kind": kind,
             "title": body[:180],
             "detail": f"🦅 Trump Truth Social｜{pub}",
             "url": link,

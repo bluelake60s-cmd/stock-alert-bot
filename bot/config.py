@@ -63,7 +63,15 @@ GOOGLE_NEWS_QUERIES = [
     ('"輝達" OR "輝達投資" OR "NVIDIA投資"', "zh"),
     ('NVIDIA invests OR stake OR backs OR partnership', "en"),
     ('"Cathie Wood" OR "木頭姐" OR "Aschenbrenner"', "en"),
+    # Leopold Aschenbrenner / Situational Awareness fund — both languages + fund name.
+    ('"Leopold Aschenbrenner" OR "Situational Awareness" fund OR hedge OR AI', "en"),
+    ('"Aschenbrenner" OR "Situational Awareness" OR "態勢感知" OR "情境感知"', "zh"),
 ]
+
+# People who are low-volume but high-signal: for these, a name match ALONE passes the
+# gnews gate (no positive-cue / watched-ticker required), so fund-performance and
+# strategy news about them isn't filtered out. Keep this list small.
+GNEWS_PERSON_ONLY = {"Leopold Aschenbrenner"}
 # Only consider headlines published within this many hours (bounds the initial load;
 # dedupe-by-link handles the rest).
 NEWS_LOOKBACK_HOURS = int(os.environ.get("NEWS_LOOKBACK_HOURS", "48"))
@@ -118,6 +126,17 @@ TRUMP_NEWS_QUERIES = [
     ("(Trump OR 特朗普 OR 川普) (持倉 OR 加倉 OR 加持 OR 買入 OR 持股 OR 披露)", "zh"),
     ("Trump (portfolio OR holdings OR \"bought shares\" OR disclosure OR \"stock trades\")", "en"),
 ]
+# Market/economy cue words. A Trump post hitting one of these is surfaced even when it
+# names no specific ticker (e.g. broad "stock market / tariffs / Fed" posts). Substring
+# match, so keep terms specific enough not to fire on everyday political language.
+TRUMP_MARKET_CUES = [
+    "stock market", "stocks", "wall street", "nasdaq", "dow jones", "s&p 500",
+    "tariff", "federal reserve", "interest rate", "rate cut", "inflation",
+    "semiconductor", "trade deal", "the economy", "record high", "all-time high",
+    "股市", "股票", "華爾街", "納斯達克", "道瓊", "標普", "關稅", "聯準會",
+    "升息", "降息", "利率", "通膨", "通脹", "半導體", "晶片", "貿易協議", "創新高", "經濟",
+]
+
 TRUMP_TICKERS = {
     "INTC": ["intel"],
     "AAPL": ["apple"],

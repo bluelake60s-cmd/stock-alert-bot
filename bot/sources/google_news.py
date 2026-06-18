@@ -89,8 +89,11 @@ def fetch(state):
             if not person:
                 continue
             ticker = _detect_ticker(text)
-            if not (ticker or any(cue in text for cue in config.POSITIVE_CUES)):
-                continue
+            # High-signal people (config.GNEWS_PERSON_ONLY) pass on a name match alone;
+            # everyone else still needs a watched ticker or a positive endorsement cue.
+            if person not in config.GNEWS_PERSON_ONLY:
+                if not (ticker or any(cue in text for cue in config.POSITIVE_CUES)):
+                    continue
             seen_links.add(link)
             cands.append((dt, person, ticker, title, source, pub, link, text))
 
@@ -100,7 +103,13 @@ def fetch(state):
     events_set = set(events)
     alerts = []
     for dt, person, ticker, title, source, pub, link, text in sorted(cands, key=lambda c: c[0]):
-        key = f"{ticker}:{dt.date().isoformat()}" if ticker else f"link:{link}"
+        if ticker:
+            key = f"{ticker}:{dt.date().isoformat()}"
+        elif person in config.GNEWS_PERSON_ONLY:
+            # Collapse same-day multi-outlet coverage of one high-signal person.
+            key = f"person:{person}:{dt.date().isoformat()}"
+        else:
+            key = f"link:{link}"
         if key in events_set:
             continue
         events_set.add(key)
