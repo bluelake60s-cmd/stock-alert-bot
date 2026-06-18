@@ -126,17 +126,6 @@ TRUMP_NEWS_QUERIES = [
     ("(Trump OR 特朗普 OR 川普) (持倉 OR 加倉 OR 加持 OR 買入 OR 持股 OR 披露)", "zh"),
     ("Trump (portfolio OR holdings OR \"bought shares\" OR disclosure OR \"stock trades\")", "en"),
 ]
-# Market/economy cue words. A Trump post hitting one of these is surfaced even when it
-# names no specific ticker (e.g. broad "stock market / tariffs / Fed" posts). Substring
-# match, so keep terms specific enough not to fire on everyday political language.
-TRUMP_MARKET_CUES = [
-    "stock market", "stocks", "wall street", "nasdaq", "dow jones", "s&p 500",
-    "tariff", "federal reserve", "interest rate", "rate cut", "inflation",
-    "semiconductor", "trade deal", "the economy", "record high", "all-time high",
-    "股市", "股票", "華爾街", "納斯達克", "道瓊", "標普", "關稅", "聯準會",
-    "升息", "降息", "利率", "通膨", "通脹", "半導體", "晶片", "貿易協議", "創新高", "經濟",
-]
-
 TRUMP_TICKERS = {
     "INTC": ["intel"],
     "AAPL": ["apple"],
