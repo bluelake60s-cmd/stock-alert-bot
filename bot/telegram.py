@@ -1,6 +1,6 @@
 import requests
 
-from bot import config
+from bot import config, translate
 
 
 def _esc(s):
@@ -9,7 +9,11 @@ def _esc(s):
 
 def send(alert, dry_run=False):
     tickers = " ".join(f"${t}" for t in alert.get("tickers", []) if t)
-    lines = [f"🚨 <b>{_esc(alert['kind'])}</b>", f"<b>{_esc(alert['title'])}</b>"]
+    title = alert.get("title", "")
+    zh = translate.to_zh(title)
+    lines = [f"🚨 <b>{_esc(alert['kind'])}</b>", f"<b>{_esc(zh)}</b>"]
+    if zh != title and title:
+        lines.append(f"<i>{_esc(title)}</i>")  # keep the original headline for cross-check
     if tickers:
         lines.append(tickers)
     if alert.get("detail"):

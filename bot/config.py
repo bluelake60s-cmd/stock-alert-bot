@@ -17,6 +17,11 @@ ANTHROPIC_MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-haiku-4-5-20251001")
 
 DRY_RUN = os.environ.get("DRY_RUN", "").lower() in ("1", "true", "yes")
 
+# Translate English headlines to Traditional Chinese before sending (free Google
+# endpoint, no key). On by default; set TRANSLATE_TO_ZH=0 to disable.
+TRANSLATE_TO_ZH = os.environ.get("TRANSLATE_TO_ZH", "1").lower() in ("1", "true", "yes")
+TRANSLATE_TARGET = os.environ.get("TRANSLATE_TARGET", "zh-TW")
+
 # ARK funds to watch for daily trades (Cathie Wood publishes buys/sells daily).
 ARK_FUNDS = [s.strip() for s in os.environ.get("ARK_FUNDS", "ARKK,ARKQ,ARKW,ARKG,ARKF").split(",") if s.strip()]
 
