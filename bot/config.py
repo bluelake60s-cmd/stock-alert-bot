@@ -192,10 +192,15 @@ CONGRESS_NEWS_QUERIES = [
     ('(美國國會 OR 國會議員 OR 眾議員 OR 參議員) (持股 OR 股票 OR 申報 OR 買權 OR 交易)', "zh"),
 ]
 
-# Major banks/brokers — used to qualify analyst-upgrade headlines and cut noise.
+# Major banks/brokers + research firms — used to qualify analyst-upgrade headlines and
+# cut noise. Includes boutique/independent shops whose price-target calls move stocks
+# (e.g. Aletheia's "nuclear" Micron $1,600 target).
 BANKS = [
     "goldman", "morgan stanley", "jpmorgan", "j.p. morgan", "bofa",
     "bank of america", "citi", "citigroup", "barclays", "ubs", "wells fargo",
     "wedbush", "evercore", "mizuho", "piper sandler", "raymond james",
     "jefferies", "deutsche bank", "hsbc", "td cowen", "bernstein",
+    # research firms / boutiques
+    "aletheia", "keybanc", "morningstar", "zacks", "baird", "stifel",
+    "b. riley", "b.riley", "cantor", "oppenheimer", "needham", "rosenblatt",
 ]
