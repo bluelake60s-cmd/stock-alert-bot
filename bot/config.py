@@ -204,3 +204,23 @@ BANKS = [
     "aletheia", "keybanc", "morningstar", "zacks", "baird", "stifel",
     "b. riley", "b.riley", "cantor", "oppenheimer", "needham", "rosenblatt",
 ]
+
+# --- Analyst / research-firm calls on watched tickers, via Google News (free) ---
+# Complements the Finnhub analyst source (which only sees Finnhub's US-English general
+# feed) by catching boutique / Asia / Chinese-media rating + price-target calls it
+# misses (e.g. Aletheia's Micron $1,600). A WATCHED_TICKER must appear, so it stays in
+# your universe instead of becoming a "Goldman issued 40 targets today" firehose; the
+# research firm (BANKS) is tagged when named.
+ANALYST_NEWS_QUERIES = [
+    ('("price target" OR "target price") (raised OR cut OR boosted OR slashed OR initiated OR "street-high")', "en"),
+    ('analyst (upgrade OR downgrade OR "Buy rating" OR "Sell rating" OR overweight OR underweight)', "en"),
+    ('(目標價 OR 評級 OR 評等) (上調 OR 下調 OR 調升 OR 調降 OR 上看 OR 首予 OR 升評 OR 降評)', "zh"),
+]
+# Up- and down-call cue words (a watched ticker must also appear in the headline).
+ANALYST_CUES = [
+    "price target", "target price", "raises", "raised", "boosts", "boosted",
+    "cuts", "cut to", "slashes", "slashed", "upgrade", "downgrade", "initiates",
+    "buy rating", "sell rating", "overweight", "underweight", "outperform", "street-high",
+    "目標價", "評級", "評等", "上調", "下調", "調升", "調降", "上看", "首予",
+    "升評", "降評", "增持", "減持",
+]

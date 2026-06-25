@@ -43,6 +43,7 @@ state/alerts.json             git-committed dedup state (THIS is the database)
 | `ark` | `ark.py` | arkfunds.io daily trades | none |
 | `ceo` | `finnhub_news.py:fetch_ceo` | Finnhub news, watched-person mentions | Finnhub |
 | `analyst` | `finnhub_news.py:fetch_analyst` | Finnhub news, upgrade + bank name | Finnhub |
+| `analyst_news` | `analyst_news.py` | Google News rating/target calls on `WATCHED_TICKERS` (EN+ZH); tags firm; 1/ticker/day | none |
 | `gnews` | `google_news.py` | bilingual Google News RSS | none |
 | `nvidia` | `nvidia.py` | NVIDIA newsroom RSS | none |
 | `google` | `google.py` | Alphabet AI-capex news (shares dedup w/ gnews) | none |
