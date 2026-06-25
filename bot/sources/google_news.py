@@ -38,6 +38,14 @@ def _detect_ticker(text):
     return None
 
 
+def _sig(title):
+    """Normalized headline fingerprint: drop the trailing ' - Outlet', keep only
+    letters/digits/CJK, take the first 48 chars. Lets the SAME story collapse to one
+    alert across different outlets AND across days (their headlines are ~identical)."""
+    t = re.sub(r"\s*[-|｜–—]\s*[^-|｜–—]+$", "", title.lower())
+    return re.sub(r"[^0-9a-z一-鿿]+", "", t)[:48]
+
+
 def _pubdt(pub, cutoff):
     """Parsed datetime if within window, else None (None also for unparseable-old)."""
     try:
@@ -103,13 +111,10 @@ def fetch(state):
     events_set = set(events)
     alerts = []
     for dt, person, ticker, title, source, pub, link, text in sorted(cands, key=lambda c: c[0]):
-        if ticker:
-            key = f"{ticker}:{dt.date().isoformat()}"
-        elif person in config.GNEWS_PERSON_ONLY:
-            # Collapse same-day multi-outlet coverage of one high-signal person.
-            key = f"person:{person}:{dt.date().isoformat()}"
-        else:
-            key = f"link:{link}"
+        # Ticker stories collapse by (ticker, day); non-ticker stories collapse by a
+        # headline fingerprint (date-independent) so the same story across outlets and
+        # across days sends only once — previously they were keyed per-link and repeated.
+        key = f"{ticker}:{dt.date().isoformat()}" if ticker else f"sig:{_sig(title)}"
         if key in events_set:
             continue
         events_set.add(key)
