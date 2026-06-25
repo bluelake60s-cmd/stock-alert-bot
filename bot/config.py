@@ -8,9 +8,6 @@ TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
 # Free key from https://finnhub.io (powers the CEO-mention + analyst-upgrade sources)
 FINNHUB_API_KEY = os.environ.get("FINNHUB_API_KEY", "")
 
-# Free key from https://financialmodelingprep.com (250 req/day) — powers the `congress` source.
-FMP_API_KEY = os.environ.get("FMP_API_KEY", "")
-
 # --- Optional LLM filter (cuts false positives). The bot is fully free WITHOUT it. ---
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 ANTHROPIC_MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-haiku-4-5-20251001")
@@ -175,21 +172,25 @@ SEC_LOOKBACK_DAYS = int(os.environ.get("SEC_LOOKBACK_DAYS", "14"))
 # SEC requires a descriptive User-Agent with contact info on every request.
 SEC_USER_AGENT = os.environ.get("SEC_USER_AGENT", "stock-alert-bot bluelake60s@gmail.com")
 
-# --- Congressional trades (Financial Modeling Prep) ---
-# Members of Congress must disclose stock trades within 45 days (STOCK Act). We scan
-# the latest House + Senate disclosure feeds and alert when a trade names one of
-# WATCHED_TICKERS. "Latest" feeds return newest-first, so a couple of pages per
-# chamber cost only a few of the 250 free daily requests.
-FMP_CONGRESS_ENDPOINTS = {
-    "眾議院": "https://financialmodelingprep.com/stable/house-latest",
-    "參議院": "https://financialmodelingprep.com/stable/senate-latest",
+# --- Congressional trades via Google News (free) ---
+# The structured congress APIs are all paid/403, but notable members' disclosures are
+# heavily reported — esp. Nancy Pelosi ("the Congress stock queen"). We track members
+# by name and surface any trade/disclosure story, tagging a watched ticker if named.
+# Extend this dict to follow more members. name → aliases (EN + ZH), matched in titles.
+CONGRESS_MEMBERS = {
+    "Nancy Pelosi": ["pelosi", "裴洛西", "佩洛西"],
+    "Tommy Tuberville": ["tuberville", "圖伯維爾"],
+    "Dan Crenshaw": ["crenshaw", "克倫肖"],
+    "Ro Khanna": ["ro khanna", "khanna"],
+    "Marjorie Taylor Greene": ["marjorie taylor greene", "marjorie greene"],
 }
-# Only alert disclosures filed within this many days (bounds the initial load; the bot
-# runs often so a short window never misses a fresh filing). Dedup handles re-sends.
-# Filings lag ~30-45 days, so this is a slow "direction" signal, not a fast one.
-CONGRESS_LOOKBACK_DAYS = int(os.environ.get("CONGRESS_LOOKBACK_DAYS", "30"))
-# Pages of the latest feed to scan per chamber (100 rows/page).
-CONGRESS_MAX_PAGES = int(os.environ.get("CONGRESS_MAX_PAGES", "3"))
+# Google News queries (broad on purpose; the CONGRESS_MEMBERS name gate keeps precision).
+CONGRESS_NEWS_QUERIES = [
+    ('"Nancy Pelosi" (stock OR shares OR options OR call OR bought OR sold OR disclosure OR portfolio)', "en"),
+    ('(裴洛西 OR 佩洛西) (持股 OR 買權 OR 賣權 OR 申報 OR 加倉 OR 持倉 OR 股票 OR 揭露)', "zh"),
+    ('(congress OR senator OR "House lawmaker" OR "Capitol Hill") ("stock trades" OR "stock disclosure" OR "periodic transaction" OR "bought shares")', "en"),
+    ('(美國國會 OR 國會議員 OR 眾議員 OR 參議員) (持股 OR 股票 OR 申報 OR 買權 OR 交易)', "zh"),
+]
 
 # Major banks/brokers — used to qualify analyst-upgrade headlines and cut noise.
 BANKS = [

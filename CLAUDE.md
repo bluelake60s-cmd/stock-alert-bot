@@ -48,7 +48,7 @@ state/alerts.json             git-committed dedup state (THIS is the database)
 | `google` | `google.py` | Alphabet AI-capex news (shares dedup w/ gnews) | none |
 | `trump` | `trump.py` | Truth Social RSS + holdings news | none |
 | `sec` | `edgar.py` | SEC EDGAR 13D/13G/13F | none |
-| `congress` | `congress.py` | FMP House+Senate disclosures; alerts on `WATCHED_TICKERS` hits. **DORMANT** — needs a **paid** FMP plan (free tier returns 402); skips cleanly when `FMP_API_KEY` unset | FMP (paid) |
+| `congress` | `congress.py` | Google News coverage of notable members' trades (`CONGRESS_MEMBERS`, e.g. Pelosi); tags a watched ticker when named, fires regardless | none |
 
 ### Alert dict shape
 ```python
@@ -84,10 +84,6 @@ else is stdlib.
 Secrets via env vars (locally: `.env` → see `.env.example`; in CI: GitHub Secrets):
 - `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` — required to actually deliver
 - `FINNHUB_API_KEY` — required for `ceo`/`analyst` sources
-- `FMP_API_KEY` — enables the `congress` source, but requires a **paid** FMP plan
-  (the free tier returns 402 on the congressional endpoints). Source is **dormant**:
-  leave this unset and `congress` skips cleanly. Free public congress feeds
-  (House/Senate Stock Watcher) are all 403 as of 2026.
 - `ANTHROPIC_API_KEY` — optional; enables the Claude filter
 
 All non-secret tuning (watched people + aliases, positive/upgrade cue words in EN+ZH,

@@ -1,115 +1,95 @@
-"""Congressional trades — US House + Senate disclosures via Financial Modeling Prep.
+"""Congressional trades via Google News — free coverage of notable members.
 
-Members of Congress must disclose stock trades within 45 days (STOCK Act). We pull
-the latest House + Senate disclosure feeds from FMP and alert when a disclosed trade
-names one of config.WATCHED_TICKERS — i.e. an insider-adjacent buy/sell in the same
-NVIDIA AI ecosystem the rest of the bot tracks (e.g. a House Financial Services member
-buying $MRVL before a partnership goes public).
+The structured congress feeds are all paid or 403 (House/Senate Stock Watcher dead,
+FMP/Capitol Trace paid), so instead of buying data we catch the disclosures the way
+the Trump-holdings source does: through news. High-profile members — above all Nancy
+Pelosi ("the Congress stock queen") — get reported every time they file, so a Google
+News search for each watched member (config.CONGRESS_MEMBERS) surfaces the trade for
+free. A watched ticker is tagged when the headline names one, but the alert fires
+regardless (the disclosure itself is the signal).
 
-Get a free key at https://financialmodelingprep.com (250 req/day) and set FMP_API_KEY.
-
-Filings lag ~30-45 days, so this is a slow "direction" signal, not a fast one. Like
-ARK/SEC it's a FACTUAL event → no "_text" key → it skips the optional LLM filter.
-
-FMP field names differ a little across endpoints/versions, so extraction is tolerant
-(symbol|ticker, representative|office|first+last, disclosureDate|dateRecieved, ...).
-On a dry run it prints the first row's keys so the real shape is easy to confirm.
+Capped at one alert per member per day (the fastest report) so the heavy tracker-site
+coverage doesn't flood. It's a news signal → carries "_text" → eligible for the
+optional Claude filter.
 """
 import datetime
+import xml.etree.ElementTree as ET
+from email.utils import parsedate_to_datetime
 
 import requests
 
 from bot import config
-
-
-def _get(row, *keys):
-    """First present, non-empty value among candidate field names."""
-    for k in keys:
-        v = row.get(k)
-        if v not in (None, ""):
-            return v
-    return ""
-
-
-def _name(row):
-    n = _get(row, "representative", "office", "name")
-    if n:
-        return n
-    full = f"{row.get('firstName', '')} {row.get('lastName', '')}".strip()
-    return full or "某國會議員"
-
-
-def _recent(ddate, cutoff):
-    """True if the disclosure date is missing or within the lookback window."""
-    if not ddate:
-        return True  # keep undated rows; dedup prevents repeats
-    try:
-        return datetime.date.fromisoformat(str(ddate)[:10]) >= cutoff
-    except ValueError:
-        return True
-
-
-def _feed(url, chamber):
-    rows = []
-    for page in range(config.CONGRESS_MAX_PAGES):
-        try:
-            r = requests.get(
-                url,
-                params={"page": page, "limit": 100, "apikey": config.FMP_API_KEY},
-                timeout=20,
-            )
-            r.raise_for_status()
-            batch = r.json() or []
-        except Exception as e:
-            print(f"[congress] {chamber} page {page} fetch failed: {e}")
-            break
-        if not isinstance(batch, list) or not batch:
-            break
-        rows.extend(batch)
-        if len(batch) < 100:
-            break
-    return rows
+from bot.sources.google_news import BASE, _detect_ticker
 
 
 def fetch(state):
-    if not config.FMP_API_KEY:
-        print("[congress] FMP_API_KEY not set; congress source skipped")
-        return []
+    cutoff = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(
+        hours=config.NEWS_LOOKBACK_HOURS
+    )
+    cands, seen_links = [], set()
+    for query, loc_key in config.CONGRESS_NEWS_QUERIES:
+        hl, gl, ceid = config.GOOGLE_NEWS_LOCALES[loc_key]
+        try:
+            r = requests.get(
+                BASE,
+                params={"q": query, "hl": hl, "gl": gl, "ceid": ceid},
+                headers={"User-Agent": "Mozilla/5.0"},
+                timeout=20,
+            )
+            r.raise_for_status()
+            root = ET.fromstring(r.content)
+        except Exception as e:
+            print(f"[congress] query {query!r} failed: {e}")
+            continue
 
-    cutoff = datetime.date.today() - datetime.timedelta(days=config.CONGRESS_LOOKBACK_DAYS)
+        for it in root.iter("item"):
+            title = (it.findtext("title") or "").strip()
+            link = (it.findtext("link") or "").strip()
+            pub = it.findtext("pubDate") or ""
+            src_el = it.find("source")
+            source = (src_el.text or "").strip() if src_el is not None else ""
+            if not title or not link or link in seen_links:
+                continue
+            try:
+                dt = parsedate_to_datetime(pub)
+                if dt < cutoff:
+                    continue
+            except (TypeError, ValueError):
+                dt = cutoff
+            low = f"{title} {source}".lower()
+            member = next(
+                (name for name, aliases in config.CONGRESS_MEMBERS.items()
+                 if any(a in low for a in aliases)),
+                None,
+            )
+            if not member:
+                continue
+            seen_links.add(link)
+            cands.append((dt, member, _detect_ticker(low), title, source, pub, link, low))
+
+    events = state.setdefault("congress_events", [])
+    events_set = set(events)
     alerts = []
-    for chamber, url in config.FMP_CONGRESS_ENDPOINTS.items():
-        rows = _feed(url, chamber)
-        if config.DRY_RUN and rows:
-            print(f"[congress] {chamber}: {len(rows)} rows; sample keys: {sorted(rows[0].keys())}")
-
-        for row in rows:
-            symbol = str(_get(row, "symbol", "ticker")).upper().strip()
-            if symbol not in config.WATCHED_TICKERS:
-                continue
-            ddate = _get(row, "disclosureDate", "dateRecieved", "filingDate")
-            if not _recent(ddate, cutoff):
-                continue
-
-            tdate = _get(row, "transactionDate", "transaction_date")
-            ttype = str(_get(row, "type", "transactionType")).lower()
-            amount = _get(row, "amount", "range") or "金額未披露"
-            name = _name(row)
-            link = _get(row, "link", "url", "disclosureUrl")
-
-            if any(w in ttype for w in ("sale", "sell", "賣")):
-                action, emoji = "賣出", "🏛️📉"
-            elif any(w in ttype for w in ("purchase", "buy", "買")):
-                action, emoji = "買入", "🏛️📈"
-            else:
-                action, emoji = (ttype or "交易"), "🏛️"
-
-            alerts.append({
-                "id": f"congress:{symbol}:{tdate}:{name}:{ttype}:{amount}",
-                "kind": f"{emoji} 國會{action}（{chamber}）",
-                "title": f"{name} {action} ${symbol}",
-                "detail": f"金額 {amount}｜交易日 {tdate or '?'}｜披露 {ddate or '?'}",
-                "url": link,
-                "tickers": [symbol],
-            })
+    for dt, member, ticker, title, source, pub, link, low in sorted(cands, key=lambda c: c[0]):
+        # One alert per member per day (the fastest report). A disclosure gets covered
+        # by many tracker sites with varied headlines, so capping by day — not by
+        # headline — is what actually keeps the volume sane.
+        key = f"{member}:{dt.date().isoformat()}"
+        if key in events_set:
+            continue
+        events_set.add(key)
+        events.append(key)
+        detail = f"📰 最快報導：{source}｜{pub}" if source else f"📰 {pub}"
+        if ticker:
+            detail += f"\n提及個股：${ticker}"
+        alerts.append({
+            "id": f"congressnews:{key}",
+            "kind": f"🏛️ 國會交易：{member}（最快：{source}）" if source else f"🏛️ 國會交易：{member}",
+            "title": title,
+            "detail": detail,
+            "url": link,
+            "tickers": [ticker] if ticker else [],
+            "_text": low,  # eligible for the optional Claude filter
+        })
+    del events[:-500]
     return alerts
