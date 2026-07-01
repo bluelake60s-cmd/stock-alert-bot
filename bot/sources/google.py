@@ -13,7 +13,7 @@ from email.utils import parsedate_to_datetime
 import requests
 
 from bot import config
-from bot.sources.google_news import BASE, _detect_ticker
+from bot.sources.google_news import BASE, _detect_ticker, _sig, seen_or_mark
 
 _GOOGLE_NAMES = ("google", "alphabet", "谷歌", "googl")
 
@@ -65,10 +65,8 @@ def fetch(state):
     alerts = []
     for dt, ticker, title, source, pub, link, text in sorted(cands, key=lambda c: c[0]):
         key = f"{ticker}:{dt.date().isoformat()}"
-        if key in events_set:
+        if seen_or_mark(events, events_set, key, f"sig:{_sig(title)}"):
             continue
-        events_set.add(key)
-        events.append(key)
         beneficiary = ticker if ticker != "GOOGL" else None
         detail = f"📰 最快報導：{source}｜{pub}"
         if beneficiary:
@@ -82,5 +80,5 @@ def fetch(state):
             "tickers": [beneficiary] if beneficiary else ["GOOGL"],
             "_text": text,
         })
-    del events[:-500]
+    del events[:-2000]
     return alerts

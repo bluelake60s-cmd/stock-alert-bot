@@ -46,6 +46,19 @@ def _sig(title):
     return re.sub(r"[^0-9a-z一-鿿]+", "", t)[:48]
 
 
+def seen_or_mark(events, events_set, *keys):
+    """Multi-key dedupe against an event log. Return True (→ caller skips) if ANY key was
+    already recorded; otherwise record every key and return False. Sources pass both an
+    event key (e.g. ticker:date) AND a headline fingerprint so an evergreen article
+    (same headline, new date/URL each day) can't re-send day after day."""
+    if any(k in events_set for k in keys):
+        return True
+    for k in keys:
+        events_set.add(k)
+        events.append(k)
+    return False
+
+
 def _pubdt(pub, cutoff):
     """Parsed datetime if within window, else None (None also for unparseable-old)."""
     try:
@@ -111,16 +124,14 @@ def fetch(state):
     events_set = set(events)
     alerts = []
     for dt, person, ticker, title, source, pub, link, text in sorted(cands, key=lambda c: c[0]):
-        # Ticker stories collapse by (ticker, day); non-ticker stories collapse by a
-        # headline fingerprint (date-independent) so the same story across outlets and
-        # across days sends only once — previously they were keyed per-link and repeated.
-        key = f"{ticker}:{dt.date().isoformat()}" if ticker else f"sig:{_sig(title)}"
-        if key in events_set:
+        # Primary key: one per (ticker, day), or per person/day for non-ticker news. PLUS
+        # a date-independent headline fingerprint, so an evergreen story (same headline,
+        # new date/URL each day — e.g. a 經濟日報 "整理包") can't re-send daily.
+        event_key = f"{ticker}:{dt.date().isoformat()}" if ticker else f"person:{person}:{dt.date().isoformat()}"
+        if seen_or_mark(events, events_set, event_key, f"sig:{_sig(title)}"):
             continue
-        events_set.add(key)
-        events.append(key)
         alerts.append({
-            "id": f"gnews:{key}",
+            "id": f"gnews:{event_key}",
             "kind": f"{person} 開金口（最快：{source}）" if source else f"{person} 開金口",
             "title": title,
             "detail": f"📰 最快報導：{source}｜{pub}",
@@ -128,5 +139,5 @@ def fetch(state):
             "tickers": [ticker] if ticker else [],
             "_text": text,  # eligible for the optional Claude filter
         })
-    del events[:-500]  # keep the dedupe log bounded
+    del events[:-2000]  # keep the dedupe log bounded (2 keys/alert → ~1000 alerts of history)
     return alerts

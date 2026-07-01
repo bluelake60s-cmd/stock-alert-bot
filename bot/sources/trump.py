@@ -19,7 +19,7 @@ from email.utils import parsedate_to_datetime
 import requests
 
 from bot import config
-from bot.sources.google_news import BASE
+from bot.sources.google_news import BASE, _sig, seen_or_mark
 
 CASHTAG = re.compile(r"\$[A-Za-z]{1,5}\b")
 _TRUMP_NAMES = ("trump", "特朗普", "川普", "特郎普")
@@ -146,10 +146,8 @@ def _holdings_news(state):
     alerts = []
     for dt, ticker, title, source, pub, link, low in sorted(cands, key=lambda c: c[0]):
         key = f"trump-{ticker or 'hold'}:{dt.date().isoformat()}"
-        if key in events_set:
+        if seen_or_mark(events, events_set, key, f"sig:{_sig(title)}"):
             continue
-        events_set.add(key)
-        events.append(key)
         alerts.append({
             "id": f"trumpnews:{key}",
             "kind": f"🇺🇸 Trump 持倉／動向（最快：{source}）" if source else "🇺🇸 Trump 持倉／動向",
@@ -159,7 +157,7 @@ def _holdings_news(state):
             "tickers": [ticker] if ticker else [],
             "_text": low,
         })
-    del events[:-500]
+    del events[:-2000]
     return alerts
 
 

@@ -19,7 +19,7 @@ from email.utils import parsedate_to_datetime
 import requests
 
 from bot import config
-from bot.sources.google_news import BASE, _detect_ticker
+from bot.sources.google_news import BASE, _detect_ticker, _sig, seen_or_mark
 
 
 def fetch(state):
@@ -71,14 +71,11 @@ def fetch(state):
     events_set = set(events)
     alerts = []
     for dt, member, ticker, title, source, pub, link, low in sorted(cands, key=lambda c: c[0]):
-        # One alert per member per day (the fastest report). A disclosure gets covered
-        # by many tracker sites with varied headlines, so capping by day — not by
-        # headline — is what actually keeps the volume sane.
+        # One alert per member per day (fastest report) PLUS a headline fingerprint so an
+        # evergreen story doesn't re-send on later days.
         key = f"{member}:{dt.date().isoformat()}"
-        if key in events_set:
+        if seen_or_mark(events, events_set, key, f"sig:{_sig(title)}"):
             continue
-        events_set.add(key)
-        events.append(key)
         detail = f"📰 最快報導：{source}｜{pub}" if source else f"📰 {pub}"
         if ticker:
             detail += f"\n提及個股：${ticker}"
@@ -91,5 +88,5 @@ def fetch(state):
             "tickers": [ticker] if ticker else [],
             "_text": low,  # eligible for the optional Claude filter
         })
-    del events[:-500]
+    del events[:-1000]
     return alerts
