@@ -128,7 +128,14 @@ def fetch(state):
         # a date-independent headline fingerprint, so an evergreen story (same headline,
         # new date/URL each day — e.g. a 經濟日報 "整理包") can't re-send daily.
         event_key = f"{ticker}:{dt.date().isoformat()}" if ticker else f"person:{person}:{dt.date().isoformat()}"
-        if seen_or_mark(events, events_set, event_key, f"sig:{_sig(title)}"):
+        keys = [event_key, f"sig:{_sig(title)}"]
+        # Low-volume, high-signal people (config.GNEWS_PERSON_ONLY, e.g. Leopold): also
+        # collapse by person+ticker across the whole log window, so an OLD event
+        # re-syndicated with a fresh date (e.g. a month-old Nebius stake re-run by MSN)
+        # can't resurface as "new".
+        if person in config.GNEWS_PERSON_ONLY and ticker:
+            keys.append(f"evt:{person}:{ticker}")
+        if seen_or_mark(events, events_set, *keys):
             continue
         alerts.append({
             "id": f"gnews:{event_key}",
