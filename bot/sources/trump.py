@@ -149,7 +149,7 @@ def _holdings_news(state):
         if seen_or_mark(events, events_set, key, f"sig:{_sig(title)}"):
             continue
         alerts.append({
-            "id": f"trumpnews:{key}",
+            "id": f"trumpnews:{_sig(title)}",  # content fingerprint → permanent dedup via `seen`
             "kind": f"🇺🇸 Trump 持倉／動向（最快：{source}）" if source else "🇺🇸 Trump 持倉／動向",
             "title": title,
             "detail": f"📰 最快報導：{source}｜{pub}",

@@ -80,7 +80,7 @@ def fetch(state):
         if ticker:
             detail += f"\n提及個股：${ticker}"
         alerts.append({
-            "id": f"congressnews:{key}",
+            "id": f"congressnews:{_sig(title)}",  # content fingerprint → permanent dedup via `seen`
             "kind": f"🏛️ 國會交易：{member}（最快：{source}）" if source else f"🏛️ 國會交易：{member}",
             "title": title,
             "detail": detail,

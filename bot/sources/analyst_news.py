@@ -76,7 +76,7 @@ def fetch(state):
         if firm:
             detail += f"\n機構：{firm.title()}"
         alerts.append({
-            "id": f"analystgn:{key}",
+            "id": f"analystgn:{_sig(title)}",  # content fingerprint → permanent dedup via `seen`
             "kind": f"📊 分析師調評：${ticker}（最快：{source}）" if source else f"📊 分析師調評：${ticker}",
             "title": title,
             "detail": detail,

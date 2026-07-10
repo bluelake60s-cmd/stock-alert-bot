@@ -72,7 +72,7 @@ def fetch(state):
         if beneficiary:
             detail += f"\n受惠股：${beneficiary}"
         alerts.append({
-            "id": f"ginv:{key}",
+            "id": f"ginv:{_sig(title)}",  # content fingerprint → permanent dedup via `seen`
             "kind": f"Google／Alphabet 投資帶動（最快：{source}）" if source else "Google／Alphabet 投資帶動",
             "title": title,
             "detail": detail,

@@ -127,18 +127,19 @@ def fetch(state):
         # Primary key: one per (ticker, day), or per person/day for non-ticker news. PLUS
         # a date-independent headline fingerprint, so an evergreen story (same headline,
         # new date/URL each day — e.g. a 經濟日報 "整理包") can't re-send daily.
+        # gnews_events collapses same-DAY coverage: one per (ticker, day) / person-day,
+        # plus person+ticker for the low-volume person-only folk.
         event_key = f"{ticker}:{dt.date().isoformat()}" if ticker else f"person:{person}:{dt.date().isoformat()}"
         keys = [event_key, f"sig:{_sig(title)}"]
-        # Low-volume, high-signal people (config.GNEWS_PERSON_ONLY, e.g. Leopold): also
-        # collapse by person+ticker across the whole log window, so an OLD event
-        # re-syndicated with a fresh date (e.g. a month-old Nebius stake re-run by MSN)
-        # can't resurface as "new".
         if person in config.GNEWS_PERSON_ONLY and ticker:
             keys.append(f"evt:{person}:{ticker}")
         if seen_or_mark(events, events_set, *keys):
             continue
         alerts.append({
-            "id": f"gnews:{event_key}",
+            # ID is the CONTENT fingerprint, not the date — so an evergreen article
+            # re-published with a new pubDate maps to the same id and is blocked by the
+            # robust `seen` set. (Date-based ids let re-dated re-runs slip through.)
+            "id": f"gnews:{_sig(title)}",
             "kind": f"{person} 開金口（最快：{source}）" if source else f"{person} 開金口",
             "title": title,
             "detail": f"📰 最快報導：{source}｜{pub}",
